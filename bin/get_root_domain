@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Domain::PublicSuffix;
+
+my $domainName = shift(@ARGV);
+usage('Requires a domain name to continue.') unless ( defined $domainName );
+
+my $publicSuffix = new Domain::PublicSuffix;
+
+printf( "%12s: %s\n", 'Domain', $domainName );
+my $rootDomain = $publicSuffix->getRootDomain($domainName);
+
+if ( defined $publicSuffix->error ) {
+    printf( "%12s: %s\n", 'Error', $publicSuffix->error );
+} else {
+    printf( "%12s: %s\n", 'Root Domain', $rootDomain );
+    printf( "%12s: %s\n", 'Suffix', $publicSuffix->suffix );
+    printf( "%12s: %s\n", 'TLD', $publicSuffix->tld );
+}
+
+sub usage {
+	my ( $error ) = @_;
+	
+	print "get_root_domain - Domain::PublicSuffix " . $Domain::PublicSuffix::VERSION . "\n";
+	print "Usage: get_root_domain <domainname>\n";
+	
+	exit(0);
+}
+
+1;
