@@ -2,11 +2,11 @@ package Domain::PublicSuffix::Default;
 use strict;
 use warnings;
 
-my $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 NAME
 
-Domain::PublicSuffix::Domain
+Domain::PublicSuffix::Default - Default PublicSuffix data file
 
 =head1 SYNOPSIS
 

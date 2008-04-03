@@ -7,7 +7,7 @@ use Data::Validate::Domain qw();
 use Domain::PublicSuffix::Default qw();
 use File::Spec qw();
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 __PACKAGE__->mk_accessors(qw/
     dataFile
@@ -42,6 +42,12 @@ to effectively reduce a fully qualified domain name down to the absolute
 root. The Mozilla PublicSuffix file is an open source, fully documented
 format that shows absolute root TLDs, primarily for Mozilla's browser
 products to be able to determine how far a cookie's security boundaries go.
+
+This module will attempt to search etc directories in usr, usr/local, and
+/opt/local for the effective_tld_names.dat file. If a file is not found,
+a default file is loaded from Domain::PublicSuffix::Default, which is
+current at the time of the module's release. You can override the data file
+path by giving the new() method a 'dataFile' argument.
 
 When creating a new PublicSuffix object, the module will load the data file
 as specified, and use the internal structure to parse each domain sent to
@@ -169,8 +175,6 @@ sub parseDataFile {
 		}
 	}
 }
-
-=head1 PUBLIC METHODS
 
 =over 4
 

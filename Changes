@@ -1,5 +1,8 @@
 Revision history for Domain-PublicSuffix
 
+0.02	2008-04-03 22:00 GMT
+		Documentation and namespace fixes, so viewing in CPAN isn't a nightmare.
+
 0.01    2008-03-31 20:00:00
         First release, likely prone to bugs I haven't even thought of.
 

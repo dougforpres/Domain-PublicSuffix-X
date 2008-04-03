@@ -6,5 +6,6 @@ bin/get_root_domain
 lib/Domain/PublicSuffix.pm
 lib/Domain/PublicSuffix/Default.pm
 t/00-load.t
+t/01-simple.t
 t/pod-coverage.t
 t/pod.t
