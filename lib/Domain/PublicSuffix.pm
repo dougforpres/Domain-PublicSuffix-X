@@ -7,7 +7,7 @@ use Data::Validate::Domain qw();
 use Domain::PublicSuffix::Default qw();
 use File::Spec qw();
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 __PACKAGE__->mk_accessors(qw/
     dataFile
@@ -52,7 +52,7 @@ path by giving the new() method a 'dataFile' argument.
 When creating a new PublicSuffix object, the module will load the data file
 as specified, and use the internal structure to parse each domain sent to
 the getRootDomain method. To re-parse the file, you must destroy and create
-a new object, or execute the parseDataFile method directly.
+a new object, or execute the _parseDataFile method directly.
 
 =head1 PUBLIC ACCESSORS
 
@@ -97,12 +97,12 @@ sub new {
     my ( $class, @args ) = @_;
     
     my $self = $class->SUPER::new(@args);
-    $self->parseDataFile();
+    $self->_parseDataFile();
     
     return $self;
 }
 
-sub parseDataFile {
+sub _parseDataFile {
 	my ( $self ) = @_;
 	
 	$self->{tldTree} = {};
@@ -197,7 +197,7 @@ sub getRootDomain {
 	}
 	
 	# Check if domain is valid
-	unless ( $self->validateDomain($domain) ) {
+	unless ( $self->_validateDomain($domain) ) {
 		$self->error('Malformed domain');
 		return;
 	}
@@ -272,7 +272,7 @@ sub getRootDomain {
 	return $self->rootDomain;
 }
 
-sub validateDomain {
+sub _validateDomain {
 	my ($self, $domain) = @_;
 	
 	my $isValid = Data::Validate::Domain::is_domain( 
@@ -284,18 +284,6 @@ sub validateDomain {
 	return 1 if ($isValid);
 	return 0;
 }
-
-=head1 PRIVATE METHODS
-
-=over 4
-
-=item parseDataFile ( $dataStream as ArrayRef )
-
-=item validateDomain ( $domain )
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 
