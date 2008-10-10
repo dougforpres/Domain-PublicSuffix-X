@@ -5,20 +5,20 @@ use warnings;
 
 use Domain::PublicSuffix;
 
-my $domainName = shift(@ARGV);
-usage('Requires a domain name to continue.') unless ( defined $domainName );
+my $domain_name = shift(@ARGV);
+usage('Requires a domain name to continue.') unless ( defined $domain_name );
 
-my $publicSuffix = new Domain::PublicSuffix;
+my $suffix = new Domain::PublicSuffix;
 
-printf( "%12s: %s\n", 'Domain', $domainName );
-my $rootDomain = $publicSuffix->getRootDomain($domainName);
+printf( "%12s: %s\n", 'Domain', $domain_name );
+my $root_domain = $suffix->get_root_domain($domain_name);
 
-if ( defined $publicSuffix->error ) {
-    printf( "%12s: %s\n", 'Error', $publicSuffix->error );
+if ( defined $suffix->error ) {
+    printf( "%12s: %s\n", 'Error',       $suffix->error );
 } else {
-    printf( "%12s: %s\n", 'Root Domain', $rootDomain );
-    printf( "%12s: %s\n", 'Suffix', $publicSuffix->suffix );
-    printf( "%12s: %s\n", 'TLD', $publicSuffix->tld );
+    printf( "%12s: %s\n", 'Root Domain', $root_domain );
+    printf( "%12s: %s\n", 'Suffix',      $suffix->suffix );
+    printf( "%12s: %s\n", 'TLD',         $suffix->tld );
 }
 
 sub usage {

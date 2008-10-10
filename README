@@ -1,4 +1,4 @@
-Domain-PublicSuffix version 0.03
+Domain-PublicSuffix version 0.04
 ================================
 
 INSTALLATION
@@ -16,6 +16,8 @@ This module requires these other modules and libraries:
 
   Class::Accessor::Fast
   Domain::Validate::Domain
+  File::Spec
+  Test::More
 
 COPYRIGHT AND LICENSE
 

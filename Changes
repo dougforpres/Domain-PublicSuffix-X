@@ -1,5 +1,14 @@
 Revision history for Domain-PublicSuffix
 
+0.04    2008-10-09 11:30 GMT
+        - Normalized code style
+        - Updated default public suffix file to latest from Mozilla
+        - Bug fixes, thanks to Jason Wieland --
+          - Documentation fixed to show that new requires a hashref
+          - Path searching for the tld data file now searches from root
+          - Improper code flow after finding a file causes module to
+            break when a data file is defined.
+
 0.03    2008-07-12 19:30 GMT
         Repackaging with MakeMaker, added basic test suite, updated Mozilla
         effective_tld data file.
