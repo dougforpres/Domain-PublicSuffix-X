@@ -6,8 +6,9 @@ use warnings;
 use Data::Validate::Domain ();
 use Domain::PublicSuffix::Default ();
 use File::Spec ();
+use Net::IDN::Punycode ();
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 __PACKAGE__->mk_accessors(qw/
     data_file
@@ -114,11 +115,44 @@ Given a fully qualified domain name, return the parsed root domain name.
 Returns undefined if an error occurs parsing the given domain, and fills
 the error accessor with a human-readable error string.
 
+=cut
+
+sub get_root_domain {
+	my ( $self, $domain ) = @_;
+
+	$self->process_domain($domain);
+
+	return $self->root_domain;
+}
+
+
+=item get_suffix ( $domain )
+
+Given a fully qualified domain name, return the suffix for that domain.
+Returns undefined if an error occurs parsing the given domain, and fills
+the error accessor with a human-readable error string.
+
+=cut
+
+sub get_suffix {
+	my ( $self, $domain ) = @_;
+
+	$self->process_domain($domain);
+
+	return $self->suffix;
+}
+
+
+=item process_domain ( $domain )
+
+Given a fully qualified domain, processes it and populates the various
+properties so that the various bits can be retrieved.
+
 =back
 
 =cut
 
-sub get_root_domain {
+sub process_domain {
 	my ( $self, $domain ) = @_;
 	
 	# Clear meta properties
@@ -250,9 +284,11 @@ sub _parse_data_file {
 		# Remove comments, skip if full line comment, remove if on-line comment
 		next if ( /^\// or /^[ \t]*?$/ );
 		s/\s.*//;
+
+		my $punified = Net::IDN::Punycode::encode_punycode($_);
 		
 		# Break down by dots
-		my @domain_array = split( /\./, $_ );
+		my @domain_array = split( /\./, $punified );
 		my $last = $self->tld_tree;
 		
 		if (scalar(@domain_array) == 1) {
