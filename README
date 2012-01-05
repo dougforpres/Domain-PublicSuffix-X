@@ -28,5 +28,7 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.8 or,
 at your option, any later version of Perl 5 you may have available.
 
-Updates and changes to the original 0.04 version of this code
+Updates and changes to the original 0.04 version of this code.
 Copyright (C) 2012 by Doug Henderson
+
+See Changes file for details.
