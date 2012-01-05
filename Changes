@@ -9,6 +9,12 @@ Revision history for Domain-PublicSuffix
           for the same parent suffix.
         - Added some handy helper methods that (hopefully) make the API
           easier to understand.
+        - Changed default loading mechanism to look for 'effective_tld
+          names.dat' in the PublicSuffix dir as last resort instead of
+          loading from 'Default.pm' - the copy in Default.pm was old and
+          there was some weirdness with the UTF8 in it.  Additionally this
+          allows for much easier updating, as all that is required is to
+          d/l and save the latest file.
 
 0.04    2008-10-09 11:30 GMT
         - Normalized code style

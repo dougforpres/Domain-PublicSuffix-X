@@ -4,7 +4,7 @@ MANIFEST
 README
 bin/get_root_domain
 lib/Domain/PublicSuffix.pm
-lib/Domain/PublicSuffix/Default.pm
+lib/Domain/PublicSuffix/effective_tld_names.dat
 t/00-load.t
 t/01-simple.t
 t/Domain-PublicSuffix.t

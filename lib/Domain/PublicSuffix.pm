@@ -6,12 +6,15 @@ use warnings;
 use Data::Validate::Domain ();
 use Domain::PublicSuffix::Default ();
 use File::Spec ();
-use Net::IDN::Punycode ();
+use File::Basename ();
+use Net::IDN::Encode ();
+use UTF8;
 
 our $VERSION = '0.05';
 
 __PACKAGE__->mk_accessors(qw/
     data_file
+    data_file_encoding
     tld_tree
     error
     root_domain
@@ -99,8 +102,17 @@ sub new {
     my ( $class, @args ) = @_;
     
     my $self = $class->SUPER::new(@args);
-    if ( $args[0] and ref($args[0]) eq 'HASH' and $args[0]->{'dataFile'} ) {
-        $self->data_file( $args[0]->{'dataFile'} );
+
+    $self->data_file_encoding('UTF8');
+
+    if ( $args[0] and ref($args[0]) eq 'HASH' ) {
+	if ( $args[0]->{'dataFile'} ) {
+        	$self->data_file( $args[0]->{'dataFile'} );
+	}
+
+	if ( $args[0]->{'dataFileEncoding'} ) {
+        	$self->data_file_encoding( $args[0]->{'dataFileEncoding'} );
+	}
     }
     $self->_parse_data_file();
     
@@ -246,24 +258,26 @@ sub _parse_data_file {
     my @tld_lines;
     my $dat;
     if ( defined $self->data_file and -e $self->data_file ) {
-        open( $dat, '<', $self->data_file )
+        open( $dat, '<:encoding(' . $self->data_file_encoding . ')' , $self->data_file )
             or die "Cannot open \'" . $self->data_file . "\': " . $!;
         @tld_lines = <$dat>;
         close($dat);
         $data_stream_ref = \@tld_lines;
         
     } else {
+	my ( $file, $path ) = File::Basename::fileparse( File::Spec->rel2abs(__FILE__), qr/\.[^.]*/ );
         my @paths = (
             File::Spec->catfile(qw/ etc /),
             File::Spec->catpath(qw/ etc /),
             File::Spec->catpath(qw/ usr etc /),
             File::Spec->catpath(qw/ usr local etc /),
             File::Spec->catpath(qw/ opt local etc /),
+            File::Spec->catpath(undef, $path, $file),
         );
         foreach my $path (@paths) {
             $path = File::Spec->catfile( $path, "effective_tld_names.dat" );
             if ( -e $path ) {
-    	        open( $dat, '<', $path )
+    	        open( $dat, '<:encoding(' . $self->data_file_encoding . ')', $path )
     	            or die "Cannot open \'" . $path . "\': " . $!;
     	        @tld_lines = <$dat>;
     	        close($dat);
@@ -273,11 +287,14 @@ sub _parse_data_file {
         }
     }
 
-    # If we haven't found one, load the default
-    unless ( defined $data_stream_ref ) {
-	    $data_stream_ref = Domain::PublicSuffix::Default::retrieve();
-    }
-    
+    # If we haven't found one, there is a problem - as the last place we check is the "PublicSuffix" dir directly under this file
+    die "No data file found" unless ($data_stream_ref);
+   
+	my $ascii;
+	my $raw;
+	my $prefix;
+	my $tld;
+ 
 	foreach ( @{$data_stream_ref} ) {
 		chomp;
 		
@@ -285,10 +302,30 @@ sub _parse_data_file {
 		next if ( /^\// or /^[ \t]*?$/ );
 		s/\s.*//;
 
-		my $punified = Net::IDN::Punycode::encode_punycode($_);
-		
+		$raw = $_;
+
+		if ($raw =~ /(!|\*\.)?(.*)/) {
+			$prefix = $1;
+			$tld = $2;
+		} else {
+			$prefix = '';
+		}
+
+		# Rule lines can start with '*.', or '!'
+		# Those are invalid chars as far as Net::IDN::Encode is concerned, so we need to strip them off and
+		# put them back after the conversion
+
+		eval {
+			$ascii = Net::IDN::Encode::domain_to_ascii($tld);
+		};
+
+		if ($@) {
+			printf STDERR "Error processing %s (%s)\n", $raw, $@;
+			$ascii = $raw;
+		}
+
 		# Break down by dots
-		my @domain_array = split( /\./, $punified );
+		my @domain_array = split( /\./, $ascii );
 		my $last = $self->tld_tree;
 		
 		if (scalar(@domain_array) == 1) {
@@ -441,8 +478,4 @@ under the same terms as Perl itself.
 
 =cut
 
-<<<<<<< HEAD
 1;
-=======
-1;
->>>>>>> 1f8e2d5107eada6c65c0d6d24d9f65a19a1c52dd

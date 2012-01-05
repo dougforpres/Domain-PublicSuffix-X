@@ -15,7 +15,7 @@ DEPENDENCIES
 This module requires these other modules and libraries:
 
   Class::Accessor::Fast
-  Domain::Validate::Domain
+  Data::Validate::Domain
   File::Spec
   Test::More
   Net::IDN::Punycode
