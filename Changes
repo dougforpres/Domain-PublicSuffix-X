@@ -1,5 +1,15 @@
 Revision history for Domain-PublicSuffix
 
+0.05    2012-01-04 21:00 PST
+        - Added Punycode encoding to all data read from config file
+          (the config file is encoded in UTF-8, comparisons are done
+          assuming ASCII, so was easier to pre-process the data file)
+        - Address a problem whereby 3-part suffixes don't seem to work
+          properly if there is a wildcard present in an earlier mapping
+          for the same parent suffix.
+        - Added some handy helper methods that (hopefully) make the API
+          easier to understand.
+
 0.04    2008-10-09 11:30 GMT
         - Normalized code style
         - Updated default public suffix file to latest from Mozilla
