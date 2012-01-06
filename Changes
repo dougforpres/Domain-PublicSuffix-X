@@ -15,6 +15,14 @@ Revision history for Domain-PublicSuffix
           there was some weirdness with the UTF8 in it.  Additionally this
           allows for much easier updating, as all that is required is to
           d/l and save the latest file.
+        - Fixed handling of punycode TLD's.  This will allow a TLD with a
+          hyphen to sneak thru.
+        - Fixed handling of labels that caused "if ($sub)" to fail (i.e.
+          "0")
+        - STILL TO DO THIS RELEASE
+          - Update perldoc
+          - Add test cases from the publicsuffix.org site
+          - ...
 
 0.04    2008-10-09 11:30 GMT
         - Normalized code style

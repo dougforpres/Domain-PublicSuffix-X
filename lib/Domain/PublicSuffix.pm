@@ -4,11 +4,9 @@ use strict;
 use warnings;
 
 use Data::Validate::Domain ();
-use Domain::PublicSuffix::Default ();
 use File::Spec ();
 use File::Basename ();
 use Net::IDN::Encode ();
-use UTF8;
 
 our $VERSION = '0.05';
 
@@ -191,15 +189,20 @@ sub process_domain {
 	# Reverse iterate through domain to find effective root
 	my $last = $self->tld_tree->{$tld};
 	my $effective_root = $tld;
+    my $level = 0;
 	
 	while ( !$self->suffix and scalar(@domain_array) > 0 ) {
+        $level++;
 		my $sub = pop(@domain_array);
-		next if (!$sub);
+		next if (!defined $sub);
 		
 		# check if $sub.$last is a root
-		if ( defined $last->{$sub} and scalar(keys %{$last->{$sub}}) == 0 ) {
-			$self->suffix( $sub . "." . $effective_root );
-			
+		if ( defined $last->{$sub} ) {
+            # If $sub is the end of the tree, set it up as the suffix, otherwise just add it
+            # to the effective root and continue (see past end of containing if)
+            if ( scalar(keys %{$last->{$sub}}) == 0 ) {
+			    $self->suffix( $sub . "." . $effective_root );
+            }
 		} elsif ( defined $last->{'*'} ) {
 			# wildcard means everything is an root, but check for exceptions
 			my $exception_flag = 0;
@@ -219,7 +222,7 @@ sub process_domain {
 				$self->suffix(join(".", $sub, $effective_root));
 			}
 			
-		} elsif ( defined $last->{'RootEnable'} and !defined $last->{$sub} ) {
+		} elsif ( (($level == 1 && defined $last->{'RootEnable'}) || $level > 1) && !defined $last->{$sub} ) {
 			# we have nothing left in the domain string, check
 			# if the root we have is enough
 			push( @domain_array, $sub );
@@ -238,7 +241,7 @@ sub process_domain {
 	
 	# Check if we're left with just an root
 	if ( $self->suffix eq $domain ) {
-		$self->error('Domain is already root');
+		$self->error('Not enough parts to be valid root domain');
 		return;
 	}
 	
@@ -267,16 +270,16 @@ sub _parse_data_file {
     } else {
 	my ( $file, $path ) = File::Basename::fileparse( File::Spec->rel2abs(__FILE__), qr/\.[^.]*/ );
         my @paths = (
-            File::Spec->catfile(qw/ etc /),
-            File::Spec->catpath(qw/ etc /),
-            File::Spec->catpath(qw/ usr etc /),
-            File::Spec->catpath(qw/ usr local etc /),
-            File::Spec->catpath(qw/ opt local etc /),
-            File::Spec->catpath(undef, $path, $file),
+            File::Spec->catdir(qw/ etc /),
+            File::Spec->catdir(qw/ usr etc /),
+            File::Spec->catdir(qw/ usr local etc /),
+            File::Spec->catdir(qw/ opt local etc /),
+            File::Spec->catdir($path, $file),
         );
         foreach my $path (@paths) {
             $path = File::Spec->catfile( $path, "effective_tld_names.dat" );
             if ( -e $path ) {
+                $self->data_file($path);
     	        open( $dat, '<:encoding(' . $self->data_file_encoding . ')', $path )
     	            or die "Cannot open \'" . $path . "\': " . $!;
     	        @tld_lines = <$dat>;
@@ -317,6 +320,10 @@ sub _parse_data_file {
 
 		eval {
 			$ascii = Net::IDN::Encode::domain_to_ascii($tld);
+
+			if (defined $prefix) {
+				$ascii = $prefix . $ascii;
+			}
 		};
 
 		if ($@) {
@@ -330,7 +337,7 @@ sub _parse_data_file {
 		
 		if (scalar(@domain_array) == 1) {
 			my $sub = pop(@domain_array);
-			next if (!$sub);
+			next if (!defined $sub);
 			
 			$last->{$sub} = {} unless ( defined $last->{$sub} );
 			$last->{$sub}->{'RootEnable'} = 1;
@@ -340,7 +347,7 @@ sub _parse_data_file {
 		while (scalar(@domain_array) > 0) {
 			my $sub = pop(@domain_array);
 			$sub =~ s/\s.*//g;
-			next if (!$sub);
+			next if (!defined $sub);
 			
 			$last->{$sub} = {} unless ( defined $last->{$sub} );
 			$last = $last->{$sub};
@@ -354,7 +361,7 @@ sub _validate_domain {
 	my $is_valid = Data::Validate::Domain::is_domain( 
 	    $domain, 
 	    {
-	        'domain_private_tld' => qr/^[a-z0-9]+$/ 
+	        'domain_private_tld' => qr/^[a-z0-9-]+$/ 
 	    }
 	);
 	return 1 if ($is_valid);
