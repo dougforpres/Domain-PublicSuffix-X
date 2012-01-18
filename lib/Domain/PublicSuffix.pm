@@ -18,6 +18,7 @@ __PACKAGE__->mk_accessors(qw/
     root_domain
     tld
     suffix
+    allow_local_tld
 /);
 
 =head1 NAME
@@ -101,19 +102,21 @@ sub new {
     
     my $self = $class->SUPER::new(@args);
 
+    $self->allow_local_tld(1);
     $self->data_file_encoding('UTF8');
 
     if ( $args[0] and ref($args[0]) eq 'HASH' ) {
-	if ( $args[0]->{'dataFile'} ) {
-        	$self->data_file( $args[0]->{'dataFile'} );
-	}
+        if ( $args[0]->{'dataFile'} ) {
+            $self->data_file( $args[0]->{'dataFile'} );
+        }
 
-	if ( $args[0]->{'dataFileEncoding'} ) {
-        	$self->data_file_encoding( $args[0]->{'dataFileEncoding'} );
-	}
+        if ( $args[0]->{'dataFileEncoding'} ) {
+            $self->data_file_encoding( $args[0]->{'dataFileEncoding'} );
+        }
     }
+
     $self->_parse_data_file();
-    
+
     return $self;
 }
 
@@ -169,7 +172,10 @@ sub process_domain {
 	foreach ( qw/tld suffix root_domain error/ ) {
 	    undef( $self->{$_} );
 	}
-	
+
+    # Ensure lower-case!
+    $domain = lc($domain || '');
+
 	# Check if domain is valid
 	unless ( $self->_validate_domain($domain) ) {
 		$self->error('Malformed domain');
@@ -182,6 +188,13 @@ sub process_domain {
 		$self->error('Invalid TLD');
 		return;
 	}
+
+    # To support official web-site tests, local needs to be treated as 'bad'
+    if ( !$self->allow_local_tld && $tld eq 'local' ) {
+        # Special case, 'local' isn't a valid internet tld
+        $self->error('Invalid TLD (local)');
+        return;
+    }
 	
 	$self->tld($tld);
 	$self->suffix($tld) if ( scalar( keys %{$self->tld_tree->{$tld}} ) == 0 );
